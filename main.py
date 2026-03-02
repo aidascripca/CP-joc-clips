@@ -26,6 +26,12 @@ def deseneaza_text_conturat(surface, text, font, culoare_text, culoare_contur, x
                 
     surface.blit(text_surface, (x, y))
 
+# --- FONTURI CARTOONISH ---
+nume_font = "comicsansms"
+font_hud = pygame.font.SysFont(nume_font, 35, bold=True)
+font_mare = pygame.font.SysFont(nume_font, 80, bold=True)
+font_efecte = pygame.font.SysFont(nume_font, 50, bold=True)    
+
 # --- ÎNCĂRCARE IMAGINI ---
 try:
     img_bg = pygame.image.load("assets/background.png").convert()
@@ -60,11 +66,7 @@ except FileNotFoundError as e:
     print(f"Eroare: Nu gasesc fisierele! Verifica numele in folderul assets. Detalii: {e}")
     sys.exit()
 
-# --- FONTURI CARTOONISH ---
-nume_font = "comicsansms"
-font_hud = pygame.font.SysFont(nume_font, 35, bold=True)
-font_mare = pygame.font.SysFont(nume_font, 80, bold=True)
-font_efecte = pygame.font.SysFont(nume_font, 50, bold=True)
+
 
 # --- VARIABILE JOC ---
 pinguin_x = LATIME // 2
@@ -84,7 +86,7 @@ COOLDOWN_DURATA = 120
 tip_cooldown = 7 
 
 lista_obiecte = []
-lista_efecte_sol = [] # Lista noua pentru obiectele cazute pe jos
+lista_efecte_sol = [] # Lista pentru obiectele cazute pe jos
 interval_generare = 60
 timer_generare = 0
 
@@ -107,7 +109,7 @@ while running:
                 nivel = 1
                 total_saci_descarcati = 0
                 lista_obiecte = []
-                lista_efecte_sol = [] # Curatam si efectele
+                lista_efecte_sol = []
                 cooldown_timer = 0
                 timer_tranzitie_nivel = 120 
                 game_over = False
@@ -131,7 +133,7 @@ while running:
             # --- LOGICA DESCARCARE ---
             if pinguin_x < 50 and saci_in_brate > 0 and cooldown_timer == 0:
                 saci_pe_platforma += saci_in_brate 
-                scor += saci_in_brate * 10
+                scor += saci_in_brate * 10 #scor per sac
                 total_saci_descarcati += saci_in_brate 
                 saci_in_brate = 0
                 
