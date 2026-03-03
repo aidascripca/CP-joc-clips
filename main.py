@@ -6,7 +6,7 @@ import sys
 pygame.init()
 LATIME, INALTIME = 800, 600
 ecran = pygame.display.set_mode((LATIME, INALTIME))
-pygame.display.set_caption("Bean Counters - Stamina & Gold/Diamond Bags")
+pygame.display.set_caption("Bean Counters - Fired Condition")
 clock = pygame.time.Clock()
 
 def deseneaza_text_conturat(surface, text, font, culoare_text, culoare_contur, x, y, center=False):
@@ -33,7 +33,6 @@ try:
         img = pygame.image.load(nume_fisier).convert_alpha()
         pinguini_imagini[i] = pygame.transform.scale(img, (120, 140)) 
     
-    # Dictionare pentru saci ca sa ii gestionam mai usor
     imagini_saci = {
         "sac": pygame.transform.scale(pygame.image.load("assets/Java_Bag.png").convert_alpha(), (120, 100)),
         "sac_gold": pygame.transform.scale(pygame.image.load("assets/Java_Bag_Gold.png").convert_alpha(), (120, 100)),
@@ -62,7 +61,7 @@ except FileNotFoundError as e:
 
 nume_font = "comicsansms"
 font_hud = pygame.font.SysFont(nume_font, 35, bold=True)
-font_mare = pygame.font.SysFont(nume_font, 80, bold=True)
+font_mare = pygame.font.SysFont(nume_font, 50, bold=True)
 font_efecte = pygame.font.SysFont(nume_font, 50, bold=True)
 
 # --- VARIABILE JOC ---
@@ -73,13 +72,17 @@ viteza_curenta_pinguin = VITEZA_DE_BAZA
 vieti = 3
 scor = 0
 
-# Folosim liste in loc de numere intregi pentru a tine minte CE tip de sac avem
 lista_saci_brate = [] 
 lista_saci_platforma = [] 
 
+# --- VARIABILE NOI: CONCEDIERE ---
+saci_scapati = 0
+MAX_SACI_SCAPATI = 20
+motiv_game_over = "" # Va fi "strivit" sau "concediat"
+
 # --- STAMINA ---
 stamina = 100.0
-stamina_epuizata = False # Devine True cand ajungi la 0 si sta True pana la 20
+stamina_epuizata = False 
 
 nivel = 1
 total_saci_descarcati = 0
@@ -111,6 +114,8 @@ while running:
                 stamina = 100.0
                 stamina_epuizata = False
                 total_saci_descarcati = 0
+                saci_scapati = 0         # Resetam contorul de saci pierduti
+                motiv_game_over = ""     # Resetam motivul
                 lista_obiecte.clear()
                 lista_efecte_sol.clear()
                 cooldown_timer = 0
@@ -129,14 +134,11 @@ while running:
             # 1. LOGICA STAMINA & VITEZA
             # ==========================================
             numar_saci = len(lista_saci_brate)
-            
-            # Calculam greutatea extra din sacii speciali
             greutate_extra = 0
             for sac in lista_saci_brate:
                 if sac == "sac_gold": greutate_extra += 0.3
                 elif sac == "sac_diamond": greutate_extra += 0.5
 
-            # Regenerare sau Scadere Stamina in functie de nr de saci
             if numar_saci == 0: modificator_stamina = 0.3
             elif numar_saci == 1: modificator_stamina = 0.1
             elif numar_saci == 2: modificator_stamina = 0.05
@@ -145,25 +147,21 @@ while running:
             elif numar_saci == 5: modificator_stamina = -0.8
             else: modificator_stamina = -0.8
 
-            # Aplicam greutatea extra (daca modificatorul e negativ, il face si mai negativ)
             if modificator_stamina < 0:
                 modificator_stamina -= greutate_extra
 
             stamina += modificator_stamina
             
-            # Limite stamina
             if stamina > 100: stamina = 100
             elif stamina <= 0: 
                 stamina = 0
-                stamina_epuizata = True # A obosit complet!
+                stamina_epuizata = True 
 
-            # Revigorare cand ajunge inapoi la 20
             if stamina_epuizata and stamina >= 20:
                 stamina_epuizata = False
 
-            # Calculam Viteza Pinguinului
             if stamina_epuizata:
-                viteza_curenta_pinguin = 2 # Foarte incet
+                viteza_curenta_pinguin = 2 
             else:
                 penalizare_greutate = 0
                 for sac in lista_saci_brate:
@@ -171,7 +169,7 @@ while running:
                     elif sac == "sac_diamond": penalizare_greutate += 2.5
                 
                 viteza_curenta_pinguin = VITEZA_DE_BAZA - penalizare_greutate
-                if viteza_curenta_pinguin < 3: viteza_curenta_pinguin = 3 # Limita inferioara
+                if viteza_curenta_pinguin < 3: viteza_curenta_pinguin = 3 
 
             # 2. MISCARE PINGUIN
             taste = pygame.key.get_pressed()
@@ -183,16 +181,14 @@ while running:
             
             # --- LOGICA DESCARCARE ---
             if pinguin_x < 50 and len(lista_saci_brate) > 0 and cooldown_timer == 0:
-                # Calculam scorul pe baza tipurilor de saci
                 for sac in lista_saci_brate:
                     if sac == "sac": scor += 10
                     elif sac == "sac_gold": scor += 30
                     elif sac == "sac_diamond": scor += 50
-                    # Ii mutam pe platforma
                     lista_saci_platforma.append(sac) 
                 
                 total_saci_descarcati += len(lista_saci_brate)
-                lista_saci_brate.clear() # Golim bratele
+                lista_saci_brate.clear() 
                 
                 nivel_anterior = nivel
                 if total_saci_descarcati >= 150: nivel = 6 
@@ -205,7 +201,7 @@ while running:
                     timer_tranzitie_nivel = 120 
                     lista_obiecte.clear()       
                     pinguin_x = LATIME // 2     
-                    lista_saci_platforma.clear() # Curatam platforma la nivel nou
+                    lista_saci_platforma.clear() 
 
             if cooldown_timer > 0:
                 img_curenta = pinguini_imagini[tip_cooldown] 
@@ -232,19 +228,18 @@ while running:
 
                 if random.randint(1, 100) <= prob_obstacol:
                     tip_ales = random.choice(["nicovala", "peste"])
-                    gravitatie_obiect = 0.4 # Gravitatie normala pentru obstacole
+                    gravitatie_obiect = 0.4 
                 else:
-                    # Daca e sac, alegem raritatea
                     sans = random.randint(1, 100)
                     if sans <= 70: 
                         tip_ales = "sac"
                         gravitatie_obiect = 0.4
                     elif sans <= 90: 
                         tip_ales = "sac_gold"
-                        gravitatie_obiect = 0.45 # Cade putin mai repede
+                        gravitatie_obiect = 0.45 
                     else: 
                         tip_ales = "sac_diamond"
-                        gravitatie_obiect = 0.55 # Cade si mai repede
+                        gravitatie_obiect = 0.55 
 
                 lista_obiecte.append({
                     "x": start_x, "y": start_y, "tip": tip_ales, 
@@ -257,7 +252,7 @@ while running:
             obiecte_de_sters = []
 
             for obj in lista_obiecte:
-                obj["vy"] += obj["grav"] # Fiecare obiect are propria forta de gravitatie acum
+                obj["vy"] += obj["grav"] 
                 obj["x"] += obj["vx"]    
                 obj["y"] += obj["vy"]    
                 
@@ -270,28 +265,43 @@ while running:
                 if cooldown_timer == 0 and hitbox_pinguin.colliderect(h_obj):
                     obiecte_de_sters.append(obj)
                     if "sac" in obj["tip"]:
-                        lista_saci_brate.append(obj["tip"]) # Adaugam exact tipul de sac in brate
+                        lista_saci_brate.append(obj["tip"]) 
                         if len(lista_saci_brate) >= 6:
                             vieti -= 1; lista_saci_brate.clear()
                             cooldown_timer = COOLDOWN_DURATA; tip_cooldown = 7
                             img_curenta = pinguini_imagini[tip_cooldown] 
-                            if vieti <= 0: game_over = True
-                            
+                            if vieti <= 0: 
+                                game_over = True
+                                motiv_game_over = "strivit"
+                                
                     elif obj["tip"] == "nicovala":
                         vieti -= 1; lista_saci_brate.clear()
                         cooldown_timer = COOLDOWN_DURATA; tip_cooldown = 8 
                         img_curenta = pinguini_imagini[tip_cooldown] 
-                        if vieti <= 0: game_over = True
+                        if vieti <= 0: 
+                            game_over = True
+                            motiv_game_over = "strivit"
                         
                     elif obj["tip"] == "peste":
                         vieti -= 1; lista_saci_brate.clear()
                         cooldown_timer = COOLDOWN_DURATA; tip_cooldown = 9 
                         img_curenta = pinguini_imagini[tip_cooldown] 
-                        if vieti <= 0: game_over = True
+                        if vieti <= 0: 
+                            game_over = True
+                            motiv_game_over = "strivit"
                 
+                # CÂND OBIECTUL CADE PE JOS
                 elif obj["y"] > NIVEL_SOL:
                     obiecte_de_sters.append(obj)
-                    if "sac" in obj["tip"]: img_efect = imagini_sparte[obj["tip"]]
+                    if "sac" in obj["tip"]: 
+                        img_efect = imagini_sparte[obj["tip"]]
+                        
+                        # --- LOGICA NOUĂ: PIERDERE SACI ---
+                        saci_scapati += 1
+                        if saci_scapati >= MAX_SACI_SCAPATI:
+                            game_over = True
+                            motiv_game_over = "concediat"
+                            
                     elif obj["tip"] == "nicovala": img_efect = img_nicovala_jos
                     elif obj["tip"] == "peste": img_efect = img_peste 
                     
@@ -320,7 +330,6 @@ while running:
     ecran.blit(img_bg, (0, 0))
     
     baza_platforma_x, baza_platforma_y = 10, INALTIME - 120 
-    # Desenam exact tipul de saci de pe platforma din lista!
     for i, tip_sac in enumerate(lista_saci_platforma):
         pozitie_y = baza_platforma_y - (i * 15)
         ecran.blit(imagini_platforma[tip_sac], (baza_platforma_x, pozitie_y))
@@ -348,23 +357,22 @@ while running:
     deseneaza_text_conturat(ecran, f"LEVEL: {nivel}", font_hud, (255, 255, 255), (0, 0, 0), LATIME // 2, 20, center=True)
     deseneaza_text_conturat(ecran, f"SCORE: {scor}", font_hud, (255, 255, 255), (0, 0, 0), 30, 100)
     deseneaza_text_conturat(ecran, f"Saci: {len(lista_saci_brate)}/5", font_hud, (255, 255, 0), (0, 0, 0), LATIME - 220, 20)
+    
+    # AFISAJ SACI SCAPATI (sub nr. de saci in brate)
+    deseneaza_text_conturat(ecran, f"Scapati: {saci_scapati}/{MAX_SACI_SCAPATI}", font_hud, (255, 100, 100), (0, 0, 0), LATIME - 250, 60)
 
-    # --- DESENARE BARA STAMINA ---
+    # --- BARA STAMINA ---
     latime_bara = 200
     inaltime_bara = 20
     x_bara, y_bara = 30, 70
     
-    # Culoare stamina (Verde -> Galben -> Rosu)
-    if stamina_epuizata: culoare_stamina = (100, 100, 100) # Gri cand esti epuizat complet
-    elif stamina > 50: culoare_stamina = (50, 255, 50)     # Verde
-    elif stamina > 20: culoare_stamina = (255, 255, 50)    # Galben
-    else: culoare_stamina = (255, 50, 50)                  # Rosu
+    if stamina_epuizata: culoare_stamina = (100, 100, 100) 
+    elif stamina > 50: culoare_stamina = (50, 255, 50)     
+    elif stamina > 20: culoare_stamina = (255, 255, 50)    
+    else: culoare_stamina = (255, 50, 50)                  
     
-    # Contur negru
     pygame.draw.rect(ecran, (0, 0, 0), (x_bara-2, y_bara-2, latime_bara+4, inaltime_bara+4))
-    # Fundal gri inchis
     pygame.draw.rect(ecran, (50, 50, 50), (x_bara, y_bara, latime_bara, inaltime_bara))
-    # Umplere stamină
     latime_curenta = (stamina / 100.0) * latime_bara
     if latime_curenta > 0:
         pygame.draw.rect(ecran, culoare_stamina, (x_bara, y_bara, latime_curenta, inaltime_bara))
@@ -372,17 +380,25 @@ while running:
 
     # --- ECRANE SUPRAPUSE ---
     if game_over:
-        if tip_cooldown == 8: deseneaza_text_conturat(ecran, "ZBANG!!", font_efecte, (255, 50, 50), (0, 0, 0), pinguin_x + 60, pinguin_y - 40, center=True)
-        elif tip_cooldown == 9: deseneaza_text_conturat(ecran, "PLEOSC!!", font_efecte, (100, 255, 255), (0, 0, 0), pinguin_x + 60, pinguin_y - 40, center=True)
-        elif tip_cooldown == 7: deseneaza_text_conturat(ecran, "STUF!!", font_efecte, (255, 200, 50), (0, 0, 0), pinguin_x + 60, pinguin_y - 40, center=True)
-
+        # Fundal intunecat peste tot ecranul
         fundal_gameover = pygame.Surface((LATIME, INALTIME))
         fundal_gameover.set_alpha(150) 
         fundal_gameover.fill((0, 0, 0))
         ecran.blit(fundal_gameover, (0, 0))
-        
-        deseneaza_text_conturat(ecran, "GAME OVER!", font_mare, (255, 50, 50), (0, 0, 0), LATIME//2, INALTIME//2 - 30, center=True)
-        deseneaza_text_conturat(ecran, "Apasa R pentru Restart", font_hud, (255, 255, 255), (0, 0, 0), LATIME//2, INALTIME//2 + 50, center=True)
+
+        if motiv_game_over == "concediat":
+            # Ecran specific pentru concediere
+            deseneaza_text_conturat(ecran, "AI FOST CONCEDIAT!", font_mare, (255, 50, 50), (0, 0, 0), LATIME//2, INALTIME//2 - 40, center=True)
+            deseneaza_text_conturat(ecran, "Ai stricat prea multa marfa...", font_hud, (255, 200, 50), (0, 0, 0), LATIME//2, INALTIME//2 + 30, center=True)
+            deseneaza_text_conturat(ecran, "Apasa R pentru Restart", font_hud, (255, 255, 255), (0, 0, 0), LATIME//2, INALTIME//2 + 80, center=True)
+        else:
+            # Ecran specific pentru strivire
+            if tip_cooldown == 8: deseneaza_text_conturat(ecran, "ZBANG!!", font_efecte, (255, 50, 50), (0, 0, 0), pinguin_x + 60, pinguin_y - 40, center=True)
+            elif tip_cooldown == 9: deseneaza_text_conturat(ecran, "PLEOSC!!", font_efecte, (100, 255, 255), (0, 0, 0), pinguin_x + 60, pinguin_y - 40, center=True)
+            elif tip_cooldown == 7: deseneaza_text_conturat(ecran, "STUF!!", font_efecte, (255, 200, 50), (0, 0, 0), pinguin_x + 60, pinguin_y - 40, center=True)
+
+            deseneaza_text_conturat(ecran, "GAME OVER!", font_mare, (255, 50, 50), (0, 0, 0), LATIME//2, INALTIME//2 - 30, center=True)
+            deseneaza_text_conturat(ecran, "Apasa R pentru Restart", font_hud, (255, 255, 255), (0, 0, 0), LATIME//2, INALTIME//2 + 50, center=True)
 
     else:
         if cooldown_timer > 0:
