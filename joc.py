@@ -215,8 +215,7 @@ while running:
                     pericol = 1 if obj["tip"] in ["nicovala", "peste"] else 0
                     valoare = 10 if obj["tip"] == "sac" else (
                         30 if obj["tip"] == "sac_gold" else (50 if obj["tip"] == "sac_diamond" else 0))
-                    env.assert_string(
-                        f"(Obiect (coordonata_obiect {int(obj['x'])}) (pericol {pericol}) (valoare {valoare}))")
+                    env.assert_string(f"(Obiect (coordonata_obiect {int(obj['x'])}) (inaltime {int(obj['y'])}) (pericol {pericol}) (valoare {valoare}))")
 
                 # AI-ul "gandeste"
                 env.run()
