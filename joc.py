@@ -207,10 +207,9 @@ while running:
                 env.reset()  # Curatam memoria CLIPS pentru cadrul curent
 
                 # Inseram starea agentului
-               # env.assert_string(
-                #    f"(Agent (coordonata_agent {int(pinguin_x)}) (viteza {int(viteza_curenta_pinguin)}) (nr_saci {len(lista_saci_brate)}))")
                 env.assert_string(
-                    f"(Agent (coordonata_agent {int(pinguin_x)}) (viteza {int(viteza_curenta_pinguin)}) (nr_saci {len(lista_saci_brate)}) (stamina {float(stamina)}) (saci_scapati {int(saci_scapati)}))")
+                    f"(Agent (coordonata_agent {int(pinguin_x)}) (viteza {int(viteza_curenta_pinguin)}) (nr_saci {len(lista_saci_brate)}))")
+
                 # Inseram starea obiectelor care cad
                 for obj in lista_obiecte:
                     pericol = 1 if obj["tip"] in ["nicovala", "peste"] else 0
